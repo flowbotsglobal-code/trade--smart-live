@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'VIP Forex Signal Club',
-  description: 'High-conviction forex signals, market calendar, and VIP trade intelligence.',
+  title: 'Trade Smart Live',
+  description: 'Trade Smart Live — high-conviction forex signals, market calendar, and VIP trade intelligence.',
   generator: 'v0.app',
   icons: {
     icon: [
