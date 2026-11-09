@@ -20,8 +20,9 @@
 }
 
 * { box-sizing: border-box; }
-html { background: #09090b; }
-body { margin: 0; background: #070709; color: #f4f4f5; font-family: Arial, Helvetica, sans-serif; }
+html { background: #020617; }
+body { margin: 0; background: linear-gradient(to bottom, #020617, rgba(30, 27, 75, 0.4), #0f172a); color: #f4f4f5; font-family: Arial, Helvetica, sans-serif; }
 .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
 button, input { font: inherit; }
-button { cursor: pointer; }
+button { cursor: pointer; transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, color 160ms ease; }
+button:active { transform: scale(0.95); }
