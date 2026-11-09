@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bell, CalendarDays, Check, ChevronRight, Copy, Crown, CreditCard, Gem, LayoutDashboard, LockKeyhole, Sparkles, TrendingDown, TrendingUp, UserRound, X, Zap } from 'lucide-react'
-import { FormEvent, useState } from 'react'
+import { FormEvent, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import TipsFeed from './tips-feed'
 
 type Signal = { id: number; pair: string; direction: 'BUY' | 'SELL'; entry: string; tp: string; sl: string; tp2?: string; tp3?: string; notes?: string; confidence: string; time: string }
@@ -21,6 +22,9 @@ const spring = { type: 'spring' as const, stiffness: 420, damping: 28 }
 const features = ['Instant Push Alerts: Never miss a trade when you’re offline', 'High-Accuracy Gold & Forex Setups (Exact Entry, TP1, TP2, TP3 & SL)', 'Live Trade Management: Real-time updates (Move SL to entry, Take partial profits)', 'Direct Analyst Notes & Risk Management Breakdown']
 
 export default function VipForexApp() {
+  const router = useRouter()
+  const brandTapCount = useRef(0)
+  const brandTapTimer = useRef<number | null>(null)
   const [activeTab, setActiveTab] = useState('Signals')
   const [signals, setSignals] = useState<Signal[]>(initialSignals)
   const [copiedId, setCopiedId] = useState<number | null>(null)
@@ -34,10 +38,20 @@ export default function VipForexApp() {
     setCopiedId(signal.id); window.setTimeout(() => setCopiedId(null), 1800)
   }
   function completePayment() { setPaymentOpen(false); setIsVip(true); setPushPrompt(true) }
+  function handleBrandTap() {
+    brandTapCount.current += 1
+    if (brandTapTimer.current) window.clearTimeout(brandTapTimer.current)
+    if (brandTapCount.current >= 3) {
+      brandTapCount.current = 0
+      router.push('/admin')
+      return
+    }
+    brandTapTimer.current = window.setTimeout(() => { brandTapCount.current = 0 }, 900)
+  }
   const tabs = [['Signals', LayoutDashboard], ['Calendar', CalendarDays], ['Tips', Sparkles], ['Profile', UserRound]] as const
 
   return <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950/40 to-slate-900 text-zinc-100 selection:bg-cyan-300 selection:text-slate-950">
-    <div className="mx-auto flex min-h-screen max-w-[520px] flex-col border-x border-slate-800/80 bg-slate-950/30 backdrop-blur-xl"><header className="flex items-center justify-between border-b border-[#27272a] px-5 pb-5 pt-7"><div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-lg border border-[#3f3f46] bg-[#18181b] text-zinc-100"><Crown size={16} /></div><div><p className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500">TRADE SMART LIVE</p><p className="mt-0.5 text-sm font-semibold">Trade Smart Live</p></div></div><div className="flex gap-2"><button aria-label="Notifications" className="grid h-9 w-9 place-items-center rounded-lg border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-indigo-950/20 text-zinc-400"><Bell size={16} /></button></div></header>
+    <div className="mx-auto flex min-h-screen max-w-[520px] flex-col border-x border-slate-800/80 bg-slate-950/30 backdrop-blur-xl"><header className="flex items-center justify-between border-b border-[#27272a] px-5 pb-5 pt-7"><button type="button" aria-label="Trade Smart Live" onClick={handleBrandTap} className="flex items-center gap-3 text-left transition-transform active:scale-95"><div className="grid h-9 w-9 place-items-center rounded-lg border border-blue-400/30 bg-blue-500/10 text-cyan-300 shadow-lg shadow-blue-950/30"><Crown size={16} /></div><div><p className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-600 bg-clip-text text-sm font-bold uppercase tracking-[0.2em] text-transparent">TRADE SMART LIVE</p><p className="mt-0.5 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-600 bg-clip-text text-sm font-semibold text-transparent">Trade Smart Live</p></div></button><div className="flex gap-2"><button aria-label="Notifications" className="grid h-9 w-9 place-items-center rounded-lg border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-indigo-950/20 text-zinc-400"><Bell size={16} /></button></div></header>
       <section className="border-b border-[#27272a] px-5 py-5"><p className="text-sm text-zinc-500">Monday, 09 December</p><div className="mt-1 flex items-center justify-between"><h1 className="text-[27px] font-semibold tracking-[-0.04em]">Market Pulse</h1><span className="text-sm font-medium tracking-wide text-zinc-400">Daily Market Analysis &amp; Outlook</span></div></section>
       {activeTab === 'Signals' && <div className="grid grid-cols-2 border-b border-[#27272a] p-1"><button onClick={() => setActiveTab('Signals')} className="rounded-md bg-[#27272a] py-2 text-sm font-semibold">VIP Signals</button><button onClick={() => setActiveTab('Calendar')} className="py-2 text-sm font-semibold text-zinc-500">Free Calendar</button></div>}
       <div className="flex-1 px-5 pb-28 pt-5">
