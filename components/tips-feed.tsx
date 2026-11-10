@@ -3,29 +3,22 @@
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion'
 import { Bookmark, Heart, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { subscribeToTips } from '@/lib/firestore'
 
-type Tip = { id: number; category: string; title: string; content: string; createdAt: string }
+type Tip = { id: string | number; category: string; title: string; content: string; createdAt: string }
 const categories = ['All', 'Forex Strategy', 'Gold Analysis', 'Risk Management']
-const TIP_STORAGE_KEY = 'trade-smart-live-tips'
 
 export default function TipsFeed() {
   const [tips, setTips] = useState<Tip[]>([])
   const [category, setCategory] = useState('All')
   const [selected, setSelected] = useState<Tip | null>(null)
-  const [liked, setLiked] = useState<number[]>([])
-  const [bookmarked, setBookmarked] = useState<number[]>([])
+  const [liked, setLiked] = useState<(string | number)[]>([])
+  const [bookmarked, setBookmarked] = useState<(string | number)[]>([])
 
-  useEffect(() => {
-    const load = () => {
-      try { setTips(JSON.parse(window.localStorage.getItem(TIP_STORAGE_KEY) || '[]')) } catch { setTips([]) }
-    }
-    load()
-    window.addEventListener('trade-smart-live-tips-updated', load)
-    return () => window.removeEventListener('trade-smart-live-tips-updated', load)
-  }, [])
+  useEffect(() => subscribeToTips((items) => setTips(items.map((item) => ({ ...item, createdAt: typeof item.createdAt === 'string' ? item.createdAt : 'Just now' })))), [])
 
   const filtered = useMemo(() => category === 'All' ? tips : tips.filter((tip) => tip.category === category), [category, tips])
-  const toggle = (list: number[], id: number) => list.includes(id) ? list.filter((item) => item !== id) : [...list, id]
+  const toggle = (list: (string | number)[], id: string | number) => list.includes(id) ? list.filter((item) => item !== id) : [...list, id]
 
   return <section>
     <div className="mb-5 flex items-end justify-between"><div><p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-300">Free insights</p><h2 className="mt-1 text-xl font-semibold">Tips & market notes</h2></div><span className="font-mono text-sm text-slate-300">{filtered.length} notes</span></div>

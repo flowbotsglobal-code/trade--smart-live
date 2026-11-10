@@ -5,8 +5,9 @@ import { Bell, CalendarDays, Check, ChevronRight, Copy, Crown, CreditCard, Gem, 
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TipsFeed from './tips-feed'
+import { subscribeToSignals } from '@/lib/firestore'
 
-type Signal = { id: number; pair: string; direction: 'BUY' | 'SELL'; entry: string; tp: string; sl: string; tp2?: string; tp3?: string; notes?: string; confidence: string; time: string; status?: 'ACTIVE' | 'WIN' | 'LOSS'; pips?: string }
+type Signal = { id: string | number; pair: string; direction: 'BUY' | 'SELL'; entry: string; tp: string; sl: string; tp2?: string; tp3?: string; notes?: string; confidence: string; time: string; status?: 'ACTIVE' | 'WIN' | 'LOSS'; pips?: string }
 type Draft = Pick<Signal, 'pair' | 'direction' | 'entry' | 'tp' | 'sl'> & { tp2: string; tp3: string; notes: string }
 
 const initialSignals: Signal[] = [
@@ -32,7 +33,7 @@ export default function VipForexApp() {
   const [activeTab, setActiveTab] = useState('Signals')
   const [signals, setSignals] = useState<Signal[]>(initialSignals)
   const [history, setHistory] = useState<Signal[]>(closedSignals)
-  const [copiedId, setCopiedId] = useState<number | null>(null)
+  const [copiedId, setCopiedId] = useState<string | number | null>(null)
   const [isVip, setIsVip] = useState(false)
   const [pricingOpen, setPricingOpen] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
@@ -65,6 +66,8 @@ export default function VipForexApp() {
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
   }, [])
+
+  useEffect(() => subscribeToSignals((records) => setSignals(records.map((record) => ({ id: record.id, pair: record.pair, direction: record.action, entry: record.entry, tp: record.tp1, sl: record.sl, tp2: record.tp2, tp3: record.tp3, notes: record.notes, confidence: 'Live', time: 'Just now', status: record.status })))), [])
 
   function copySignal(signal: Signal) {
     navigator.clipboard?.writeText(`${signal.pair} ${signal.direction} | Entry ${signal.entry} | TP ${signal.tp} | SL ${signal.sl}`)
