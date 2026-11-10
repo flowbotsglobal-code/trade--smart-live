@@ -2,16 +2,20 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bell, CalendarDays, Check, ChevronRight, Copy, Crown, CreditCard, Gem, LayoutDashboard, LockKeyhole, Sparkles, TrendingDown, TrendingUp, UserRound, X, Zap } from 'lucide-react'
-import { FormEvent, useRef, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TipsFeed from './tips-feed'
 
-type Signal = { id: number; pair: string; direction: 'BUY' | 'SELL'; entry: string; tp: string; sl: string; tp2?: string; tp3?: string; notes?: string; confidence: string; time: string }
+type Signal = { id: number; pair: string; direction: 'BUY' | 'SELL'; entry: string; tp: string; sl: string; tp2?: string; tp3?: string; notes?: string; confidence: string; time: string; status?: 'ACTIVE' | 'WIN' | 'LOSS'; pips?: string }
 type Draft = Pick<Signal, 'pair' | 'direction' | 'entry' | 'tp' | 'sl'> & { tp2: string; tp3: string; notes: string }
 
 const initialSignals: Signal[] = [
   { id: 1, pair: 'XAU/USD', direction: 'BUY', entry: '2,648.20', tp: '2,672.50', sl: '2,635.80', confidence: '92%', time: '02 min ago' },
   { id: 2, pair: 'XAU/USD', direction: 'SELL', entry: '2,671.80', tp: '2,649.00', sl: '2,684.30', confidence: '87%', time: '18 min ago' },
+]
+const closedSignals: Signal[] = [
+  { id: 101, pair: 'XAU/USD', direction: 'BUY', entry: '2,604.20', tp: '2,628.50', sl: '2,591.80', confidence: '91%', time: 'Closed 04 Dec', status: 'WIN', pips: '+243 pips' },
+  { id: 102, pair: 'EUR/USD', direction: 'SELL', entry: '1.0842', tp: '1.0788', sl: '1.0874', confidence: '86%', time: 'Closed 02 Dec', status: 'LOSS', pips: '-32 pips' },
 ]
 const events = [
   { country: 'US', title: 'FOMC Statement', date: 'Today, 19:00', countdown: '02:14:36', impact: 'HIGH' },
@@ -27,11 +31,40 @@ export default function VipForexApp() {
   const brandTapTimer = useRef<number | null>(null)
   const [activeTab, setActiveTab] = useState('Signals')
   const [signals, setSignals] = useState<Signal[]>(initialSignals)
+  const [history, setHistory] = useState<Signal[]>(closedSignals)
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [isVip, setIsVip] = useState(false)
   const [pricingOpen, setPricingOpen] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
   const [pushPrompt, setPushPrompt] = useState(false)
+
+  useEffect(() => {
+    const chime = () => {
+      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!AudioContextClass) return
+      const context = new AudioContextClass()
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      oscillator.type = 'sine'
+      oscillator.frequency.setValueAtTime(740, context.currentTime)
+      oscillator.frequency.exponentialRampToValueAtTime(1040, context.currentTime + 0.16)
+      gain.gain.setValueAtTime(0.0001, context.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.06, context.currentTime + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.24)
+      oscillator.connect(gain)
+      gain.connect(context.destination)
+      oscillator.start()
+      oscillator.stop(context.currentTime + 0.25)
+    }
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'trade-smart-live-last-signal') chime()
+      if (event.key === 'trade-smart-live-history' && event.newValue) setHistory(JSON.parse(event.newValue))
+    }
+    const savedHistory = window.localStorage.getItem('trade-smart-live-history')
+    if (savedHistory) setHistory(JSON.parse(savedHistory))
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   function copySignal(signal: Signal) {
     navigator.clipboard?.writeText(`${signal.pair} ${signal.direction} | Entry ${signal.entry} | TP ${signal.tp} | SL ${signal.sl}`)
@@ -52,12 +85,13 @@ export default function VipForexApp() {
 
   return <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950/40 to-slate-900 text-zinc-100 selection:bg-cyan-300 selection:text-slate-950">
     <div className="mx-auto flex min-h-screen max-w-[520px] flex-col border-x border-slate-800/80 bg-slate-950/30 backdrop-blur-xl"><header className="flex items-center justify-between border-b border-[#27272a] px-5 pb-5 pt-7"><button type="button" aria-label="Trade Smart Live" onClick={handleBrandTap} className="flex items-center gap-3 text-left transition-transform active:scale-95"><div className="grid h-9 w-9 place-items-center rounded-lg border border-blue-400/30 bg-blue-500/10 text-cyan-300 shadow-lg shadow-blue-950/30"><Crown size={16} /></div><div><p className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-600 bg-clip-text text-sm font-bold uppercase tracking-[0.2em] text-transparent">TRADE SMART LIVE</p><p className="mt-0.5 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-600 bg-clip-text text-sm font-bold text-transparent">Trade Smart Live</p></div></button><div className="flex gap-2"><button aria-label="Notifications" className="grid h-9 w-9 place-items-center rounded-lg border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-indigo-950/20 text-zinc-400"><Bell size={16} /></button></div></header>
-      <div className="grid grid-cols-2 border-b border-[#27272a] p-1"><button onClick={() => setActiveTab('Signals')} className={`rounded-md py-2 text-sm font-bold ${activeTab === 'Signals' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}>VIP Signals</button><button onClick={() => setActiveTab('Calendar')} className={`rounded-md py-2 text-sm font-bold ${activeTab === 'Calendar' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}>Free Calendar</button></div>
+      <div className="grid grid-cols-3 border-b border-[#27272a] p-1"><button onClick={() => setActiveTab('Signals')} className={`rounded-md py-2 text-sm font-bold ${activeTab === 'Signals' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}>VIP Signals</button><button onClick={() => setActiveTab('History')} className={`rounded-md py-2 text-sm font-bold ${activeTab === 'History' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}>Track Record</button><button onClick={() => setActiveTab('Calendar')} className={`rounded-md py-2 text-sm font-bold ${activeTab === 'Calendar' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}>Free Calendar</button></div>
       <div className="flex-1 px-5 pb-28 pt-3">
         {activeTab === 'Signals' && <><div className="mb-4 flex items-center justify-between"><div><p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-300">Live feed</p><p className="mt-1 text-sm text-zinc-300">{signals.length} active signals</p></div></div><div className="relative"><div className={!isVip ? 'select-none blur-[7px]' : ''}>{signals.map((signal, index) => <SignalCard key={signal.id} signal={signal} index={index} copied={copiedId === signal.id} onCopy={() => copySignal(signal)} />)}</div>{!isVip && <div className="absolute inset-0 flex items-center justify-center"><div className="w-full rounded-xl border border-[#3f3f46] bg-[#121215]/95 p-5 text-center shadow-2xl"><div className="mx-auto grid h-11 w-11 place-items-center rounded-full border border-[#52525b] bg-[#18181b]"><LockKeyhole size={19} /></div><h2 className="mt-3 text-base font-bold">VIP Signals Locked</h2><p className="mt-1 text-sm leading-relaxed text-slate-300">Unlock the feed to see exact entries and live trade management.</p><button onClick={() => setPricingOpen(true)} className="mt-4 h-11 w-full rounded-lg bg-zinc-100 text-sm font-bold text-zinc-950 transition-all active:scale-95">Unlock VIP Access for ₦15,000/mo</button></div></div>}</div></>}
+        {activeTab === 'History' && <HistoryView signals={history} />}
         {activeTab === 'Calendar' && <CalendarView onUpgrade={() => setPricingOpen(true)} />}
         {activeTab === 'Tips' && <TipsFeed />}
-        {activeTab === 'Profile' && <SimpleView title="Your membership" body={isVip ? 'VIP access is active. Push notifications are enabled for your account.' : 'You are currently on the Free plan.'} action={!isVip ? () => setPricingOpen(true) : undefined} />}
+        {activeTab === 'Profile' && <div><SimpleView title="Your membership" body={isVip ? 'VIP access is active. Push notifications are enabled for your account.' : 'You are currently on the Free plan.'} action={!isVip ? () => setPricingOpen(true) : undefined} />{isVip && <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4"><span className="text-sm font-bold text-emerald-300">VIP subscription active</span><span className="font-mono text-sm font-bold text-emerald-200">30 days remaining</span></div>}</div>}
       </div>
       <div className="fixed bottom-0 z-20 w-full max-w-[520px] border-t border-[#27272a] bg-[#09090b] px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-3"><div className="grid grid-cols-4 rounded-full border border-[#27272a] bg-[#111115] p-1">{tabs.map(([label, Icon]) => <button key={label} onClick={() => setActiveTab(label)} className={`relative flex flex-col items-center gap-1.5 rounded-full py-1.5 text-sm font-medium ${activeTab === label ? 'text-cyan-300' : 'text-slate-300'}`}>{activeTab === label && <motion.span layoutId="active-tab" transition={spring} className="absolute inset-0 rounded-full border border-cyan-400/30 bg-cyan-400/10 shadow-lg shadow-cyan-950/30" />}<span className="relative z-10 flex flex-col items-center gap-1.5"><Icon size={18} strokeWidth={activeTab === label ? 2.2 : 1.8} /><span>{label}</span></span></button>)}</div></div>
     </div>
@@ -70,6 +104,7 @@ export default function VipForexApp() {
 function SignalCard({ signal, index, copied, onCopy }: { signal: Signal; index: number; copied: boolean; onCopy: () => void }) { const buy = signal.direction === 'BUY'; return <motion.article initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06, ...spring }} className="mb-3 rounded-xl border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-indigo-950/20 p-4"><div className="flex items-start justify-between"><div className="flex items-center gap-3"><div className={`grid h-9 w-9 place-items-center rounded-lg border ${buy ? 'border-emerald-900 text-emerald-400' : 'border-red-900 text-red-400'}`}>{buy ? <TrendingUp size={17} /> : <TrendingDown size={17} />}</div><div><div className="flex items-center gap-2"><h2 className="font-bold">{signal.pair}</h2><span className={`rounded px-1.5 py-0.5 text-sm font-bold ${buy ? 'bg-emerald-950 text-emerald-400' : 'bg-red-950 text-red-400'}`}>{signal.direction}</span></div><p className="mt-1 text-sm text-slate-300">{signal.time} · {signal.confidence} confidence</p></div></div><span className={`mt-1 h-2 w-2 rounded-full ${buy ? 'bg-emerald-500' : 'bg-red-500'}`} /></div><div className="mt-4 grid grid-cols-3 gap-2 border-y border-[#27272a] py-3"><Level label="ENTRY" value={signal.entry} /><Level label="TP1" value={signal.tp} color="text-emerald-400" /><Level label="STOP LOSS" value={signal.sl} color="text-red-400" /></div>{(signal.tp2 || signal.tp3 || signal.notes) && <div className="border-b border-[#27272a] pb-3 text-sm"><div className="flex gap-4 font-mono text-sm text-emerald-400">{signal.tp2 && <span>TP2 {signal.tp2}</span>}{signal.tp3 && <span>TP3 {signal.tp3}</span>}</div>{signal.notes && <p className="mt-2 leading-relaxed text-slate-300">{signal.notes}</p>}</div>}<motion.button whileTap={{ scale: 0.98 }} onClick={onCopy} className={`mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold ${copied ? 'bg-zinc-100 text-zinc-950' : 'bg-[#27272a] text-zinc-200'}`}>{copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy Signal</>}</motion.button></motion.article> }
 function Level({ label, value, color = 'text-zinc-200' }: { label: string; value: string; color?: string }) { return <div><p className="text-sm tracking-wider text-slate-400">{label}</p><p className={`mt-1 font-mono text-sm font-bold ${color}`}>{value}</p></div> }
 
+function HistoryView({ signals }: { signals: Signal[] }) { const wins = signals.filter((signal) => signal.status === 'WIN').length; const winRate = Math.round((wins / signals.length) * 100); return <div><div className="rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-400/10 via-blue-500/10 to-indigo-500/10 p-5 shadow-lg shadow-cyan-950/20"><p className="text-sm font-bold uppercase tracking-wider text-cyan-300">Monthly performance</p><div className="mt-2 flex items-end justify-between gap-3"><p className="font-mono text-3xl font-bold text-white">{winRate}% <span className="text-base text-slate-300">win rate</span></p><p className="font-mono text-lg font-bold text-emerald-300">+420 pips</p></div></div><div className="mt-6 flex items-center justify-between"><div><p className="text-sm font-bold uppercase tracking-wider text-slate-300">History</p><h2 className="mt-1 text-xl font-bold text-white">Track record</h2></div><span className="font-mono text-sm font-bold text-slate-300">{signals.length} closed</span></div><div className="mt-4 space-y-3">{signals.map((signal) => <div key={signal.id} className="rounded-xl border border-slate-800/80 bg-slate-900/70 p-4"><div className="flex items-start justify-between"><div><p className="font-bold text-white">{signal.pair} <span className="ml-2 text-sm text-slate-300">{signal.direction}</span></p><p className="mt-1 text-sm text-slate-300">{signal.time} · Entry {signal.entry}</p></div><span className={`rounded-full px-3 py-1 text-sm font-bold tracking-wide ${signal.status === 'WIN' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>{signal.status === 'WIN' ? 'WIN' : 'LOSS'}</span></div><div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-3"><span className="text-sm font-bold text-slate-300">{signal.status === 'WIN' ? 'TP1 / TP2 / TP3 hit' : 'Stop Loss hit'}</span><span className={`font-mono text-sm font-bold ${signal.status === 'WIN' ? 'text-emerald-300' : 'text-rose-300'}`}>{signal.pips}</span></div></div>)}</div></div> }
 function CalendarView({ onUpgrade }: { onUpgrade: () => void }) { return <div><div className="mb-5 flex items-end justify-between"><div><p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-300">Free plan</p><h2 className="mt-1 text-xl font-bold">Economic calendar</h2></div><CalendarDays size={21} className="text-zinc-400" /></div><p className="mb-5 text-sm leading-relaxed text-slate-300">High-impact events that can move gold and forex markets.</p><div className="space-y-3">{events.map((event, index) => <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.06 }} key={event.title} className="rounded-xl border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-indigo-950/20 p-4"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><span className="grid h-7 w-7 place-items-center rounded-md border border-red-900 text-sm font-bold text-red-400">{event.country}</span><span className="rounded bg-red-950 px-1.5 py-1 text-sm font-bold text-red-400">RED FOLDER</span></div><span className="font-mono text-sm text-red-400">{event.countdown}</span></div><p className="mt-3 font-bold">{event.title}</p><p className="mt-1 text-sm text-slate-300">{event.date} · USD</p></motion.div>)}</div><button onClick={onUpgrade} className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg border border-[#3f3f46] py-3 text-sm font-bold text-zinc-300"><LockKeyhole size={14} /> Compare Free and VIP</button></div> }
 function SimpleView({ title, body, action }: { title: string; body: string; action?: () => void }) { return <div className="rounded-xl border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-indigo-950/20 p-5"><p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-300">Account</p><h2 className="mt-2 text-xl font-bold">{title}</h2><p className="mt-2 text-sm leading-relaxed text-slate-300">{body}</p>{action && <button onClick={action} className="mt-5 h-11 w-full rounded-lg bg-zinc-100 text-sm font-bold text-zinc-950">View VIP pricing</button>}</div> }
 
