@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 
 export default function PwaClient() {
   useEffect(() => {
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => undefined)
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').then((registration) => registration.update()).catch(() => undefined) }
     const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID
     if (!appId) return
     const script = document.createElement('script')

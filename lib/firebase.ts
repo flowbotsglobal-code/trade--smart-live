@@ -17,8 +17,6 @@ export const db = getFirestore(app)
 let persistencePromise: Promise<void> | undefined
 export function enableFirestoreOfflineAccess() {
   if (typeof window === 'undefined' || persistencePromise) return persistencePromise
-  persistencePromise = enableMultiTabIndexedDbPersistence(db).catch((error: { code?: string }) => {
-    if (error.code !== 'failed-precondition' && error.code !== 'unimplemented') throw error
-  })
+  persistencePromise = enableMultiTabIndexedDbPersistence(db).catch(() => undefined)
   return persistencePromise
 }

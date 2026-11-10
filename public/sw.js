@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trade-smart-live-v1'
+const CACHE_NAME = 'trade-smart-live-v3'
 const CORE_ASSETS = ['/', '/manifest.json', '/icon.svg', '/apple-icon.png']
 
 self.addEventListener('install', (event) => {
@@ -7,16 +7,15 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim())
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))).then(() => self.clients.claim()))
 })
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
-    if (event.request.url.startsWith(self.location.origin)) {
-      const copy = response.clone()
-      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy))
-    }
+  if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return
+  const request = event.request
+  const isMutable = request.mode === 'navigate' || request.url.includes('/api/') || request.url.includes('/_next/')
+  event.respondWith(fetch(request).then((response) => {
+    if (response.ok && !isMutable) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()))
     return response
-  }).catch(() => caches.match('/'))))
+  }).catch(() => caches.match(request).then((cached) => cached || caches.match('/'))))
 })

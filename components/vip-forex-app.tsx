@@ -45,6 +45,7 @@ export default function VipForexApp() {
   const [pricingOpen, setPricingOpen] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
   const [pushPrompt, setPushPrompt] = useState(false)
+  const signalVersionRef = useRef('')
 
   useEffect(() => {
     const chime = () => {
@@ -75,7 +76,15 @@ export default function VipForexApp() {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  useEffect(() => subscribeToSignals((records) => setSignals(records.map((record) => ({ id: record.id, pair: record.pair, direction: record.action, entry: record.entry, tp: record.tp1, sl: record.sl, tp2: record.tp2, tp3: record.tp3, notes: record.notes, confidence: 'Live', time: 'Just now', status: record.status })))), [])
+  useEffect(() => {
+    const unsubscribe = subscribeToSignals((records) => {
+      const version = JSON.stringify(records.map((record) => [record.id, record.status, record.entry, record.tp1, record.sl]))
+      if (version === signalVersionRef.current) return
+      signalVersionRef.current = version
+      setSignals(records.map((record) => ({ id: record.id, pair: record.pair, direction: record.action, entry: record.entry, tp: record.tp1, sl: record.sl, tp2: record.tp2, tp3: record.tp3, notes: record.notes, confidence: 'Live', time: 'Just now', status: record.status })))
+    })
+    return () => unsubscribe()
+  }, [])
 
   const copySignal = useCallback((signal: Signal) => {
     void navigator.clipboard?.writeText(`${signal.pair} ${signal.direction} | Entry ${signal.entry} | TP ${signal.tp} | SL ${signal.sl}`).catch(() => undefined)
