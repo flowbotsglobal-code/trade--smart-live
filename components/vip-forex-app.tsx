@@ -7,6 +7,7 @@ import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
 import TipsFeed from './tips-feed'
 import { subscribeToSignals } from '@/lib/firestore'
+import { PwaInstallButton } from './pwa-client'
 
 type Signal = { id: string | number; pair: string; direction: 'BUY' | 'SELL'; entry: string; tp: string; sl: string; tp2?: string; tp3?: string; notes?: string; confidence: string; time: string; status?: 'ACTIVE' | 'WIN' | 'LOSS'; pips?: string }
 type Draft = Pick<Signal, 'pair' | 'direction' | 'entry' | 'tp' | 'sl'> & { tp2: string; tp3: string; notes: string }
@@ -100,7 +101,7 @@ export default function VipForexApp() {
         {activeTab === 'History' && <HistoryView signals={history} />}
         {activeTab === 'Calendar' && <CalendarView onUpgrade={() => setPricingOpen(true)} />}
         {activeTab === 'Tips' && <TipsFeed />}
-        {activeTab === 'Profile' && <div><SimpleView title="Your membership" body={isVip ? 'VIP access is active. Push notifications are enabled for your account.' : 'You are currently on the Free plan.'} action={!isVip ? () => setPricingOpen(true) : undefined} />{isVip && <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4"><span className="text-sm font-bold text-emerald-300">VIP subscription active</span><span className="font-mono text-sm font-bold text-emerald-200">30 days remaining</span></div>}</div>}
+        {activeTab === 'Profile' && <div><SimpleView title="Your membership" body={isVip ? 'VIP access is active. Push notifications are enabled for your account.' : 'You are currently on the Free plan.'} action={!isVip ? () => setPricingOpen(true) : undefined} /><PwaInstallButton />{isVip && <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4"><span className="text-sm font-bold text-emerald-300">VIP subscription active</span><span className="font-mono text-sm font-bold text-emerald-200">30 days remaining</span></div>}</div>}
       </div>
       <div className="fixed bottom-0 z-20 w-full max-w-[520px] border-t border-[#27272a] bg-[#09090b] px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-3"><div className="grid grid-cols-4 rounded-full border border-[#27272a] bg-[#111115] p-1">{tabs.map(([label, Icon]) => <button key={label} onClick={() => setActiveTab(label)} className={`relative flex flex-col items-center gap-1.5 rounded-full py-1.5 text-sm font-medium ${activeTab === label ? 'text-cyan-300' : 'text-slate-300'}`}>{activeTab === label && <motion.span layoutId="active-tab" transition={spring} className="absolute inset-0 rounded-full border border-cyan-400/30 bg-cyan-400/10 shadow-lg shadow-cyan-950/30" />}<span className="relative z-10 flex flex-col items-center gap-1.5"><Icon size={18} strokeWidth={activeTab === label ? 2.2 : 1.8} /><span>{label}</span></span></button>)}</div></div>
     </div>
