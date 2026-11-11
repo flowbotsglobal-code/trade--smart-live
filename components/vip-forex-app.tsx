@@ -32,10 +32,10 @@ const events = [
 ]
 const spring = { type: 'spring' as const, stiffness: 420, damping: 28 }
 const features = [
-    { icon: Bell, title: 'Instant Push Sound Alerts', tag: 'INSTANT ALERTS', description: 'Never miss a sniper setup—get audio alerts straight to your lock screen the exact second a trade drops.' },
-    { icon: TrendingUp, title: 'High-Precision Gold & Forex Setups', tag: 'GOLD + FOREX', description: 'Exact Entry Price, multiple Take Profits (TP1, TP2, TP3), and Stop Loss levels with clean risk-reward ratios.' },
-    { icon: Zap, title: 'Live Trade Management', tag: 'POSITION UPDATES', description: 'Real-time updates on active positions (e.g., “Move SL to entry now,” “Take partials at TP1”).' },
-    { icon: Sparkles, title: 'Direct Analyst Notes & Bias', tag: 'MARKET BIAS', description: 'Daily market structure breakdowns and risk management guidance from professional traders.' },
+    { icon: Bell, title: 'Lock-Screen Signal Alerts', description: 'Audio notifications hit your phone the exact second a trade is called—no need to keep checking Telegram.' },
+    { icon: TrendingUp, title: 'Gold & Forex Sniper Setups', description: 'Exact Entry, Stop Loss, and TP1/TP2/TP3 targets built around high-probability liquidity setups.' },
+    { icon: Zap, title: 'Real-Time Trade Management', description: 'Instant updates when to move your Stop Loss to break-even or lock in partial profits.' },
+    { icon: Sparkles, title: 'Weekly High-Impact News Breakdown', description: 'Clear bias and risk rules before major USD/GBP news drops so your account stays protected.' },
   ]
 
 export default function VipForexApp() {
@@ -147,9 +147,9 @@ function PricingModal({ onClose, onUnlock }: { onClose: () => void; onUnlock: ()
         <div className="min-h-0 overflow-y-auto px-4 pb-4 pt-5 sm:px-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">VIP • Limited Membership</p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">Trade with an edge.</h2>
-              <p className="mt-1 text-sm text-slate-300">Get the full market edge.</p>
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">VIP Membership</p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">Stop missing winning setups.</h2>
+              <p className="mt-1 text-sm text-slate-300">Get exact entries, take-profit targets, and live position alerts sent straight to your phone.</p>
             </div>
             <button type="button" onClick={onClose} aria-label="Close pricing" className="grid size-9 shrink-0 place-items-center rounded-full border border-slate-700 text-slate-300 transition-colors hover:bg-slate-800 active:bg-slate-700"><X size={18} /></button>
           </div>
@@ -159,22 +159,20 @@ function PricingModal({ onClose, onUnlock }: { onClose: () => void; onUnlock: ()
           </div>
           <p className="mt-2 font-mono text-[10px] tracking-wide text-slate-400">FREE: RED FOLDER CALENDAR + DAILY TIPS</p>
           <div className="mb-2 mt-4 flex items-center justify-between gap-2">
-            <h3 className="text-sm font-bold text-white">Your VIP edge</h3>
-            <span className="font-mono text-[10px] font-bold tracking-[0.14em] text-cyan-300">4 PREMIUM BENEFITS</span>
+            <h3 className="text-sm font-bold text-white">VIP benefits</h3>
           </div>
           <ul aria-label="VIP membership benefits" className="flex flex-col gap-2.5">
             {features.map((feature) => <VipFeatureCard key={feature.title} {...feature} />)}
           </ul>
         </div>
         <div className="shrink-0 border-t border-cyan-500/20 bg-slate-950/95 p-4">
-          <button type="button" onClick={onUnlock} aria-label="Unlock VIP Access for ₦15,000/mo" className="flex min-h-12 w-full touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-2 text-xs font-bold leading-tight text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:brightness-110 active:scale-[0.99] sm:flex-row sm:text-sm"><span className="sm:inline">Unlock VIP Access</span><span className="sm:inline">for ₦15,000/mo</span></button>
-          <p className="mt-2 text-center font-mono text-[10px] tracking-wide text-slate-400">CANCEL ANYTIME · TRADE WITH DISCIPLINE</p>
+          <button type="button" onClick={onUnlock} aria-label="Get Instant VIP Access — ₦15,000/mo" className="flex min-h-12 w-full touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-2 text-xs font-bold leading-tight text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:brightness-110 active:scale-[0.99] sm:flex-row sm:text-sm"><span className="sm:inline">Get Instant VIP Access</span><span className="sm:inline">— ₦15,000/mo</span></button>
         </div>
       </motion.div>
     </motion.div>
   }
 
-  function VipFeatureCard({ icon: Icon, title, tag, description }: (typeof features)[number]) {
+  function VipFeatureCard({ icon: Icon, title, description }: (typeof features)[number]) {
     return <li className="rounded-xl border border-cyan-500/30 bg-slate-900/80 p-3 shadow-[0_0_18px_rgba(34,211,238,0.08)]">
       <div className="flex items-start gap-2.5">
         <Icon size={17} className="mt-0.5 shrink-0 text-cyan-300" aria-hidden="true" />
@@ -183,7 +181,6 @@ function PricingModal({ onClose, onUnlock }: { onClose: () => void; onUnlock: ()
             <h4 className="text-sm font-bold leading-snug text-white">{title}</h4>
             <Check size={15} className="mt-0.5 shrink-0 text-cyan-400 drop-shadow-[0_0_7px_rgba(34,211,238,0.9)]" aria-hidden="true" />
           </div>
-          <p className="mt-1 font-mono text-[9px] font-bold tracking-[0.13em] text-cyan-300">{tag}</p>
           <p className="mt-1.5 text-xs leading-relaxed text-slate-300">{description}</p>
         </div>
       </div>
