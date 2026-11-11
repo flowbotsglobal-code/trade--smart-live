@@ -33,10 +33,7 @@ const events = [
   { country: 'US', title: 'Nonfarm Payrolls', date: 'Fri, 13:30', countdown: '2d 16h', impact: 'HIGH' },
 ]
 const spring = { type: 'spring' as const, stiffness: 420, damping: 28 }
-const freeBenefits = [
-  'Live Red Folder Economic Calendar (CPI, FOMC, NFP)',
-  'Basic Market Insights & Daily Tips',
-]
+const freeBenefits = ['Basic Market Insights & Daily Tips']
 const vipBenefits = [
   'Instant Lock-Screen Alerts',
   'High-Precision Gold & Forex Setups',
