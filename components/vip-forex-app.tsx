@@ -1,11 +1,13 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bell, CalendarDays, Check, ChevronRight, Copy, Crown, CreditCard, Gem, LayoutDashboard, LockKeyhole, Sparkles, TrendingDown, TrendingUp, UserRound, X, Zap } from 'lucide-react'
+import { Bell, CalendarDays, Check, ChevronRight, Copy, Crown, CreditCard, Gem, LayoutDashboard, LockKeyhole, NotebookPen, Sparkles, TrendingDown, TrendingUp, UserRound, X } from 'lucide-react'
 import { FormEvent, memo, useCallback, useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
 import TipsFeed from './tips-feed'
+import JournalTab from './journal-tab'
+import { cn } from '@/lib/utils'
 import { subscribeToSignals } from '@/lib/firestore'
 import { PwaInstallButton } from './pwa-client'
 
@@ -31,12 +33,16 @@ const events = [
   { country: 'US', title: 'Nonfarm Payrolls', date: 'Fri, 13:30', countdown: '2d 16h', impact: 'HIGH' },
 ]
 const spring = { type: 'spring' as const, stiffness: 420, damping: 28 }
-const features = [
-    { icon: Bell, title: 'Instant Lock-Screen Alerts', description: 'Audio notifications hit your phone the exact second a trade is called. No delays, no missed entries.' },
-    { icon: TrendingUp, title: 'Gold & Forex Sniper Entries', description: 'Precise entry price, multiple TP levels (TP1, TP2, TP3), and risk-managed stop losses.' },
-    { icon: Zap, title: 'Active Trade Management', description: 'Real-time updates telling you exactly when to move your stop loss to break-even or secure profits.' },
-    { icon: Sparkles, title: 'High-Impact News Guidance', description: 'Clear market bias and safety rules before major CPI, FOMC, or NFP data releases.' },
-  ]
+const freeBenefits = [
+  'Live Red Folder Economic Calendar (CPI, FOMC, NFP)',
+  'Basic Market Insights & Daily Tips',
+]
+const vipBenefits = [
+  'Instant Lock-Screen Alerts',
+  'High-Precision Gold & Forex Setups',
+  'Live Trade Management',
+  'Direct Analyst Notes & Risk Breakdown',
+]
 
 export default function VipForexApp() {
   const router = useRouter()
@@ -106,15 +112,15 @@ export default function VipForexApp() {
     }
     brandTapTimer.current = window.setTimeout(() => { brandTapCount.current = 0 }, 900)
   }
-  const tabs = [['Signals', LayoutDashboard], ['Calendar', CalendarDays], ['Tips', Sparkles], ['Profile', UserRound]] as const
+  const tabs = [['Signals', LayoutDashboard], ['Journal', NotebookPen], ['Tips', Sparkles], ['Profile', UserRound]] as const
 
   return <main className="mx-auto min-h-screen w-full max-w-md overflow-x-hidden bg-[#050814] text-slate-100 selection:bg-cyan-300 selection:text-slate-950">
     <div className="flex min-h-screen w-full flex-col overflow-x-hidden border-x border-slate-800/80 bg-[#050814]"><header className="flex items-center justify-between border-b border-[#27272a] px-4 pb-5 pt-6"><button type="button" aria-label="Trade Smart Live" onClick={handleBrandTap} className="relative z-30 pointer-events-auto flex items-center gap-3 text-left transition-transform active:scale-95"><div className="grid h-9 w-9 place-items-center rounded-lg border border-blue-400/30 bg-blue-500/10 text-cyan-300 shadow-lg shadow-blue-950/30"><Crown size={16} /></div><div className="min-w-0 overflow-hidden"><p className="whitespace-nowrap bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-600 bg-clip-text text-sm font-bold uppercase tracking-[0.2em] text-transparent">TRADE SMART LIVE</p><p className="mt-0.5 whitespace-nowrap bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-600 bg-clip-text text-sm font-bold text-transparent">Trade Smart Live</p></div></button><div className="flex gap-2"><button type="button" aria-label="Notifications" className="grid h-9 w-9 touch-manipulation place-items-center rounded-lg border border-slate-800/80 bg-slate-900/70 text-zinc-400 shadow-2xl shadow-indigo-950/20 transition-all active:scale-95"><Bell size={16} /></button></div></header>
-      <div className="relative z-30 grid grid-cols-3 pointer-events-auto border-b border-[#27272a] bg-slate-950 p-1"><button onClick={() => setActiveTab('Signals')} className={`relative z-40 pointer-events-auto min-w-0 overflow-hidden px-1 text-center touch-manipulation whitespace-nowrap rounded-md py-2 text-[9px] font-bold tracking-tight transition-all active:scale-95 ${activeTab === 'Signals' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}><span className="hidden sm:inline">VIP Signals</span><span className="sm:hidden">Signals</span></button><button onClick={() => setActiveTab('History')} className={`relative z-40 pointer-events-auto min-w-0 overflow-hidden px-1 text-center touch-manipulation whitespace-nowrap rounded-md py-2 text-[9px] font-bold tracking-tight transition-all active:scale-95 ${activeTab === 'History' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}><span className="hidden sm:inline">Track Record</span><span className="sm:hidden">History</span></button><button onClick={() => setActiveTab('Calendar')} className={`relative z-40 pointer-events-auto min-w-0 overflow-hidden px-1 text-center touch-manipulation whitespace-nowrap rounded-md py-2 text-[9px] font-bold tracking-tight transition-all active:scale-95 ${activeTab === 'Calendar' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}><span className="hidden sm:inline">Free Calendar</span><span className="sm:hidden">Calendar</span></button></div>
+      <div className="relative z-30 grid grid-cols-3 pointer-events-auto border-b border-[#27272a] bg-slate-950 p-1"><button onClick={() => setActiveTab('Signals')} className={`relative z-40 pointer-events-auto min-w-0 overflow-hidden px-1 text-center touch-manipulation whitespace-nowrap rounded-md py-2 text-[9px] font-bold tracking-tight transition-all active:scale-95 ${activeTab === 'Signals' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}><span className="hidden sm:inline">VIP Signals</span><span className="sm:hidden">Signals</span></button><button onClick={() => setActiveTab('History')} className={`relative z-40 pointer-events-auto min-w-0 overflow-hidden px-1 text-center touch-manipulation whitespace-nowrap rounded-md py-2 text-[9px] font-bold tracking-tight transition-all active:scale-95 ${activeTab === 'History' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}><span className="hidden sm:inline">Track Record</span><span className="sm:hidden">History</span></button><button onClick={() => setActiveTab('Journal')} className={`relative z-40 pointer-events-auto min-w-0 overflow-hidden px-1 text-center touch-manipulation whitespace-nowrap rounded-md py-2 text-[9px] font-bold tracking-tight transition-all active:scale-95 ${activeTab === 'Journal' ? 'bg-[#27272a] text-white' : 'text-slate-300'}`}><span className="hidden sm:inline">Journal</span><span className="sm:hidden">Journal</span></button></div>
       <section aria-label="Current tab content" className="min-w-0 flex-1 px-4 pb-28 pt-6">
         {activeTab === 'Signals' && <><div className="mb-4 flex items-center justify-between"><div><p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-300">Live feed</p><p className="mt-1 text-sm text-zinc-300">{signals.length} active signals</p></div></div><div className="relative min-h-[420px]"><div className={!isVip ? 'select-none opacity-40 blur-[7px]' : ''}>{(signals.length ? signals : previewSignals).map((signal, index) => <SignalCard key={signal.id} signal={signal} index={index} copied={copiedId === signal.id} onCopy={copySignal} />)}</div>{!isVip && <div className="absolute inset-0 z-10 flex items-center justify-center px-2"><div className="mx-auto w-full max-w-[92%] rounded-2xl border border-cyan-500/30 bg-slate-900/90 p-5 text-center shadow-2xl shadow-blue-950/50"><div className="mx-auto grid h-11 w-11 place-items-center rounded-full border border-cyan-400/40 bg-cyan-400/10 text-cyan-300"><LockKeyhole size={19} /></div><h2 className="mt-3 text-lg font-bold text-white">VIP Signals Locked</h2><p className="mt-2 text-sm leading-relaxed text-slate-300">Unlock the feed to see exact entries and live trade management.</p><button onClick={() => setPricingOpen(true)} className="mt-5 w-full rounded-xl bg-cyan-400 px-4 py-3.5 text-sm font-semibold leading-snug text-slate-950 transition-colors hover:bg-cyan-300 touch-manipulation">Unlock VIP Access for ₦15,000/mo</button></div></div>}</div></>}
         {activeTab === 'History' && <HistoryView signals={history} />}
-        {activeTab === 'Calendar' && <CalendarView onUpgrade={() => setPricingOpen(true)} />}
+        {activeTab === 'Journal' && <JournalTab />}
         {activeTab === 'Tips' && <TipsFeed />}
         {activeTab === 'Profile' && <div><SimpleView title="Your membership" body={isVip ? 'VIP access is active. Push notifications are enabled for your account.' : 'You are currently on the Free plan.'} action={!isVip ? () => setPricingOpen(true) : undefined} /><PwaInstallButton />{isVip && <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4"><span className="text-sm font-bold text-emerald-300">VIP subscription active</span><span className="font-mono text-sm font-bold text-emerald-200">30 days remaining</span></div>}</div>}
       </section>
@@ -142,49 +148,47 @@ function AdminMetric({ label, value, detail }: { label: string; value: string; d
 function AdminDrawer({ draft, setDraft, subscribers, pushReach, signalCount, onClose, onSubmit }: { draft: Draft; setDraft: (draft: Draft) => void; subscribers: number; pushReach: number; signalCount: number; onClose: () => void; onSubmit: (event: FormEvent) => void }) { return <motion.div className="fixed inset-0 z-40 bg-black/75" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}><motion.aside onClick={(e) => e.stopPropagation()} initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={spring} className="ml-auto flex h-full w-full max-w-[760px] flex-col overflow-y-auto border-l border-slate-800/80 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-indigo-950/20 p-5 md:p-8"><div className="flex items-center justify-between"><div><p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-300">Admin tools</p><h2 className="mt-1 text-xl font-bold">Admin dashboard</h2></div><button onClick={onClose} aria-label="Close drawer" className="text-slate-300"><X size={19} /></button></div><div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-4"><AdminMetric label="Active VIP subscribers" value={String(subscribers)} detail="paid members" /><AdminMetric label="Total revenue" value={`₦${(subscribers * 15000).toLocaleString('en-NG')}`} detail={`${subscribers} × ₦15,000`} /><AdminMetric label="Signals broadcasted" value={String(signalCount)} detail="this month" /><AdminMetric label="Push reach" value={String(pushReach)} detail="subscribed devices" /></div><form onSubmit={onSubmit} className="mt-8 space-y-4"><label className="block text-sm text-zinc-400">Pair<input value={draft.pair} onChange={(e) => setDraft({ ...draft, pair: e.target.value })} className="mt-2 h-11 w-full rounded-lg border border-[#3f3f46] bg-[#09090b] px-3 text-sm outline-none focus:border-zinc-100" /></label><div><p className="text-sm text-zinc-400">Direction</p><div className="mt-2 grid grid-cols-2 gap-2">{(['BUY', 'SELL'] as const).map((direction) => <button type="button" key={direction} onClick={() => setDraft({ ...draft, direction })} className={`rounded-lg border py-3 text-sm font-bold ${draft.direction === direction ? 'border-zinc-100 bg-[#27272a] text-zinc-100' : 'border-[#3f3f46] text-slate-300'}`}>{direction}</button>)}</div></div><div className="grid grid-cols-3 gap-2">{(['entry', 'sl', 'tp', 'tp2', 'tp3'] as const).map((key) => <label key={key} className="text-sm text-zinc-400">{key.toUpperCase()}<input required value={draft[key]} onChange={(e) => setDraft({ ...draft, [key]: e.target.value })} className="mt-2 h-11 w-full rounded-lg border border-[#3f3f46] bg-[#09090b] px-2 font-mono text-sm outline-none focus:border-zinc-100" /></label>)}</div><label className="block text-sm text-zinc-400">Analyst notes<textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="Context, invalidation, or strategy notes" className="mt-2 min-h-24 w-full resize-none rounded-lg border border-[#3f3f46] bg-[#09090b] p-3 text-sm outline-none focus:border-zinc-100" /></label><button className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-zinc-100 text-sm font-bold text-zinc-950"><Bell size={14} /> Broadcast Signal & Push Alert</button></form></motion.aside></motion.div> }
 
 function PricingModal({ onClose, onUnlock }: { onClose: () => void; onUnlock: () => void }) {
-    return <motion.div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/75 p-4" onClick={onClose}>
-      <motion.div onClick={(event) => event.stopPropagation()} className="my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl shadow-cyan-950/40">
-        <div className="min-h-0 overflow-y-auto px-4 pb-4 pt-5 sm:px-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">VIP Membership</p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">Stop missing profitable setups.</h2>
-              <p className="mt-1 text-sm text-slate-300">Get exact entry levels, take-profit targets, and lock-screen sound alerts sent straight to your phone.</p>
-            </div>
-            <button type="button" onClick={onClose} aria-label="Close pricing" className="grid size-9 shrink-0 place-items-center rounded-full border border-slate-700 text-slate-300 transition-colors hover:bg-slate-800 active:bg-slate-700"><X size={18} /></button>
+  return <motion.div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/75 p-4" onClick={onClose}>
+    <motion.div onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="vip-pricing-title" className="my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-cyan-500/30 bg-slate-950 shadow-2xl shadow-cyan-950/40">
+      <div className="min-h-0 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">PRICING / UPGRADE</p>
+            <h2 id="vip-pricing-title" className="mt-1 text-2xl font-bold tracking-tight text-white">Go VIP</h2>
           </div>
-          <div className="mt-4 flex flex-wrap items-baseline gap-x-2">
-            <span className="font-mono text-4xl font-bold tracking-tight text-cyan-300">₦15,000</span>
-            <span className="font-mono text-xs font-bold text-cyan-100/70">/ MONTH</span>
-          </div>
-          <p className="mt-2 font-mono text-[10px] tracking-wide text-slate-400">FREE: RED FOLDER CALENDAR + DAILY TIPS</p>
-          <div className="mb-2 mt-4 flex items-center justify-between gap-2">
-            <h3 className="text-sm font-bold text-white">VIP benefits</h3>
-          </div>
-          <ul aria-label="VIP membership benefits" className="flex flex-col gap-2.5">
-            {features.map((feature) => <VipFeatureCard key={feature.title} {...feature} />)}
-          </ul>
+          <button type="button" onClick={onClose} aria-label="Close pricing" className="grid size-9 shrink-0 place-items-center rounded-full border border-slate-700 text-slate-300 transition-colors hover:bg-slate-800 active:bg-slate-700"><X size={18} /></button>
         </div>
-        <div className="shrink-0 border-t border-cyan-500/20 bg-slate-950/95 p-4">
-          <button type="button" onClick={onUnlock} aria-label="Join VIP Room — ₦15,000/mo" className="flex min-h-12 w-full touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-2 text-xs font-bold leading-tight text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:brightness-110 active:scale-[0.99] sm:flex-row sm:text-sm"><span className="sm:inline">Join VIP Room</span><span className="sm:inline">— ₦15,000/mo</span></button>
-        </div>
-      </motion.div>
-    </motion.div>
-  }
 
-  function VipFeatureCard({ icon: Icon, title, description }: (typeof features)[number]) {
-    return <li className="rounded-xl border border-cyan-500/30 bg-slate-900/80 p-3 shadow-[0_0_18px_rgba(34,211,238,0.08)]">
-      <div className="flex items-start gap-2.5">
-        <Icon size={17} className="mt-0.5 shrink-0 text-cyan-300" aria-hidden="true" />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <h4 className="text-sm font-bold leading-snug text-white">{title}</h4>
-            <Check size={15} className="mt-0.5 shrink-0 text-cyan-400 drop-shadow-[0_0_7px_rgba(34,211,238,0.9)]" aria-hidden="true" />
-          </div>
-          <p className="mt-1.5 text-xs leading-relaxed text-slate-200">{description}</p>
+        <div className="mt-4 rounded-xl border border-slate-700 bg-slate-900/90 px-4 py-3">
+          <p className="text-sm leading-relaxed text-slate-200"><span className="font-bold uppercase tracking-wide text-cyan-100">SIMPLE MONTHLY ACCESS</span> — Cancel anytime. No annual commitment.</p>
+        </div>
+
+        <p className="mt-5 flex flex-wrap items-baseline gap-x-2 font-mono text-3xl font-bold tracking-tight text-white sm:text-4xl"><span className="text-cyan-300">₦15,000</span><span className="text-base font-semibold text-slate-200"> / month</span></p>
+
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <PlanComparisonCard title="Free" benefits={freeBenefits} />
+          <PlanComparisonCard title="VIP" benefits={vipBenefits} featured />
         </div>
       </div>
-    </li>
-  }
+
+      <div className="shrink-0 border-t border-cyan-500/20 bg-slate-950/95 p-4">
+        <button type="button" onClick={onUnlock} aria-label="Unlock VIP Access — ₦15,000/mo" className="min-h-12 w-full touch-manipulation rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-3 py-3 text-center text-sm font-bold leading-snug text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:brightness-110 active:scale-[0.99] sm:text-base">Unlock VIP Access — ₦15,000/mo</button>
+      </div>
+    </motion.div>
+  </motion.div>
+}
+
+  type PlanComparisonCardProps = { title: string; benefits: string[]; featured?: boolean }
+
+function PlanComparisonCard({ title, benefits, featured = false }: PlanComparisonCardProps) {
+  const headingId = `pricing-${title.toLowerCase()}-heading`
+
+  return <section aria-labelledby={headingId} className={cn('min-w-0 rounded-2xl border p-4', featured ? 'border-cyan-400/50 bg-cyan-400/5 shadow-lg shadow-cyan-950/20' : 'border-slate-700 bg-slate-900/80')}>
+    <h3 id={headingId} className={cn('border-b border-slate-700 pb-3 text-base font-bold', featured ? 'text-cyan-100' : 'text-white')}>{title}</h3>
+    <ul className="mt-4 flex flex-col gap-3">
+      {benefits.map((benefit) => <li key={benefit} className="flex min-w-0 items-start gap-2.5 text-sm leading-relaxed text-slate-100"><Check size={16} className={`mt-0.5 shrink-0 ${featured ? 'text-cyan-300' : 'text-slate-400'}`} aria-hidden="true" /><span className="min-w-0 break-words">{benefit}</span></li>)}
+    </ul>
+  </section>
+}
 function PaymentModal({ onClose, onComplete }: { onClose: () => void; onComplete: () => void }) { return <motion.div className="fixed inset-0 z-[60] grid place-items-center bg-black/80 px-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={spring} className="w-full max-w-[380px] rounded-2xl border border-[#3f3f46] bg-[#121215] p-5"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><CreditCard size={18} /><h2 className="font-bold">Paystack checkout</h2></div><button onClick={onClose} aria-label="Close payment" className="text-slate-300"><X size={18} /></button></div><div className="mt-5 rounded-lg border border-[#27272a] bg-[#09090b] p-4"><p className="text-sm text-slate-300">Trade Smart Live VIP</p><p className="mt-2 font-mono text-2xl font-bold">₦15,000</p><p className="mt-1 text-sm text-slate-300">Monthly membership</p></div><div className="mt-4 space-y-3"><input aria-label="Email address" placeholder="Email address" className="h-11 w-full rounded-lg border border-[#3f3f46] bg-[#09090b] px-3 text-sm outline-none focus:border-zinc-100" /><input aria-label="Card number" placeholder="Card number" className="h-11 w-full rounded-lg border border-[#3f3f46] bg-[#09090b] px-3 font-mono text-sm outline-none focus:border-zinc-100" /></div><button onClick={onComplete} className="mt-5 h-11 w-full rounded-lg bg-zinc-100 text-sm font-bold text-zinc-950">Complete payment</button><p className="mt-3 text-center text-sm text-slate-400">Simulation mode · No charge will be made</p></motion.div></motion.div> }
 function PushPrompt({ onClose }: { onClose: () => void }) { return <motion.div className="fixed inset-x-5 bottom-24 z-[70] mx-auto max-w-[420px] rounded-xl border border-[#3f3f46] bg-[#18181b] p-4 shadow-2xl" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}><div className="flex gap-3"><Bell size={18} className="mt-0.5" /><div><p className="text-sm font-bold">Enable push notifications?</p><p className="mt-1 text-sm leading-relaxed text-slate-300">Get real-time alerts when a new VIP signal is published.</p><div className="mt-3 flex gap-2"><button onClick={onClose} className="rounded-md bg-zinc-100 px-3 py-2 text-sm font-bold text-zinc-950">Allow notifications</button><button onClick={onClose} className="px-3 py-2 text-sm text-slate-300">Not now</button></div></div></div></motion.div> }
