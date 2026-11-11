@@ -12,14 +12,18 @@ type FeedEvent = {
   previous?: string
 }
 
-function currentWeekBounds() {
-  const now = new Date()
-  const start = new Date(now)
-  const day = start.getDay()
-  start.setDate(start.getDate() - (day === 0 ? 6 : day - 1))
-  start.setHours(0, 0, 0, 0)
-  const end = new Date(start)
-  end.setDate(end.getDate() + 7)
+const WAT_OFFSET_MS = 60 * 60 * 1000
+
+function currentWATWeekBounds() {
+  const nowWAT = new Date(Date.now() + WAT_OFFSET_MS)
+  const daysSinceMonday = (nowWAT.getUTCDay() + 6) % 7
+  const mondayAtMidnightWAT = Date.UTC(
+    nowWAT.getUTCFullYear(),
+    nowWAT.getUTCMonth(),
+    nowWAT.getUTCDate() - daysSinceMonday,
+  )
+  const start = new Date(mondayAtMidnightWAT - WAT_OFFSET_MS)
+  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000)
   return { start, end }
 }
 
@@ -28,7 +32,7 @@ export async function GET() {
     const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', { next: { revalidate: 900 } })
     if (!response.ok) throw new Error(`Calendar feed returned ${response.status}`)
     const feed = await response.json() as FeedEvent[]
-    const { start, end } = currentWeekBounds()
+    const { start, end } = currentWATWeekBounds()
     const events = feed.flatMap((event) => {
       if (!event.date || !event.title) return []
       const date = new Date(event.date)
