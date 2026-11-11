@@ -32,10 +32,10 @@ const events = [
 ]
 const spring = { type: 'spring' as const, stiffness: 420, damping: 28 }
 const features = [
-    { icon: Bell, title: 'Lock-Screen Signal Alerts', description: 'Audio notifications hit your phone the exact second a trade is called—no need to keep checking Telegram.' },
-    { icon: TrendingUp, title: 'Gold & Forex Sniper Setups', description: 'Exact Entry, Stop Loss, and TP1/TP2/TP3 targets built around high-probability liquidity setups.' },
-    { icon: Zap, title: 'Real-Time Trade Management', description: 'Instant updates when to move your Stop Loss to break-even or lock in partial profits.' },
-    { icon: Sparkles, title: 'Weekly High-Impact News Breakdown', description: 'Clear bias and risk rules before major USD/GBP news drops so your account stays protected.' },
+    { icon: Bell, title: 'Instant Lock-Screen Alerts', description: 'Audio notifications hit your phone the exact second a trade is called. No delays, no missed entries.' },
+    { icon: TrendingUp, title: 'Gold & Forex Sniper Entries', description: 'Precise entry price, multiple TP levels (TP1, TP2, TP3), and risk-managed stop losses.' },
+    { icon: Zap, title: 'Active Trade Management', description: 'Real-time updates telling you exactly when to move your stop loss to break-even or secure profits.' },
+    { icon: Sparkles, title: 'High-Impact News Guidance', description: 'Clear market bias and safety rules before major CPI, FOMC, or NFP data releases.' },
   ]
 
 export default function VipForexApp() {
@@ -148,8 +148,8 @@ function PricingModal({ onClose, onUnlock }: { onClose: () => void; onUnlock: ()
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">VIP Membership</p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">Stop missing winning setups.</h2>
-              <p className="mt-1 text-sm text-slate-300">Get exact entries, take-profit targets, and live position alerts sent straight to your phone.</p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">Stop missing profitable setups.</h2>
+              <p className="mt-1 text-sm text-slate-300">Get exact entry levels, take-profit targets, and lock-screen sound alerts sent straight to your phone.</p>
             </div>
             <button type="button" onClick={onClose} aria-label="Close pricing" className="grid size-9 shrink-0 place-items-center rounded-full border border-slate-700 text-slate-300 transition-colors hover:bg-slate-800 active:bg-slate-700"><X size={18} /></button>
           </div>
@@ -166,7 +166,7 @@ function PricingModal({ onClose, onUnlock }: { onClose: () => void; onUnlock: ()
           </ul>
         </div>
         <div className="shrink-0 border-t border-cyan-500/20 bg-slate-950/95 p-4">
-          <button type="button" onClick={onUnlock} aria-label="Get Instant VIP Access — ₦15,000/mo" className="flex min-h-12 w-full touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-2 text-xs font-bold leading-tight text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:brightness-110 active:scale-[0.99] sm:flex-row sm:text-sm"><span className="sm:inline">Get Instant VIP Access</span><span className="sm:inline">— ₦15,000/mo</span></button>
+          <button type="button" onClick={onUnlock} aria-label="Join VIP Room — ₦15,000/mo" className="flex min-h-12 w-full touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-2 text-xs font-bold leading-tight text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:brightness-110 active:scale-[0.99] sm:flex-row sm:text-sm"><span className="sm:inline">Join VIP Room</span><span className="sm:inline">— ₦15,000/mo</span></button>
         </div>
       </motion.div>
     </motion.div>
@@ -181,7 +181,7 @@ function PricingModal({ onClose, onUnlock }: { onClose: () => void; onUnlock: ()
             <h4 className="text-sm font-bold leading-snug text-white">{title}</h4>
             <Check size={15} className="mt-0.5 shrink-0 text-cyan-400 drop-shadow-[0_0_7px_rgba(34,211,238,0.9)]" aria-hidden="true" />
           </div>
-          <p className="mt-1.5 text-xs leading-relaxed text-slate-300">{description}</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-200">{description}</p>
         </div>
       </div>
     </li>
