@@ -291,18 +291,22 @@ export default function JournalTab() {
         <BookOpen aria-hidden="true" className="mt-1 size-5 shrink-0 text-cyan-300" />
       </header>
 
-      <section aria-label="Journal summary metrics" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <article className="min-w-0 rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+      <section
+        aria-label="Scrollable journal metrics"
+        tabIndex={0}
+        className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 sm:grid sm:grid-cols-3 sm:overflow-visible"
+      >
+        <article className="w-36 shrink-0 snap-start rounded-xl border border-slate-800 bg-slate-900/80 p-3 sm:w-auto sm:shrink">
           <p className="text-xs font-semibold leading-tight text-slate-300">Win Rate</p>
           <p className="mt-2 font-mono text-lg font-bold text-white">{metrics.winRate}%</p>
           <p className="mt-1 text-[10px] leading-tight text-slate-400">BE excluded</p>
         </article>
-        <article className="min-w-0 rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+        <article className="w-36 shrink-0 snap-start rounded-xl border border-slate-800 bg-slate-900/80 p-3 sm:w-auto sm:shrink">
           <p className="text-xs font-semibold leading-tight text-slate-300">Total Pips</p>
-          <p className={`mt-2 truncate font-mono text-lg font-bold ${metrics.totalPips >= 0 ? 'text-emerald-200' : 'text-rose-200'}`}>{formatPips(metrics.totalPips)}</p>
+          <p className={`mt-2 font-mono text-lg font-bold ${metrics.totalPips >= 0 ? 'text-emerald-200' : 'text-rose-200'}`}>{formatPips(metrics.totalPips)}</p>
           <p className="mt-1 text-[10px] leading-tight text-slate-400">All logged trades</p>
         </article>
-        <article className="min-w-0 rounded-xl border border-slate-800 bg-slate-900/80 p-3">
+        <article className="w-36 shrink-0 snap-start rounded-xl border border-slate-800 bg-slate-900/80 p-3 sm:w-auto sm:shrink">
           <p className="text-xs font-semibold leading-tight text-slate-300">Logged Trades</p>
           <p className="mt-2 font-mono text-lg font-bold text-white">{metrics.totalTrades}</p>
           <p className="mt-1 text-[10px] leading-tight text-slate-400">Saved on this device</p>
