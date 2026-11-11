@@ -42,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className="min-h-screen overflow-x-hidden bg-[#050814] text-slate-100 antialiased">
         <PwaClient />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
