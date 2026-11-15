@@ -1,8 +1,8 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bell, CalendarDays, Check, ChevronRight, Copy, Crown, CreditCard, Gem, LayoutDashboard, LockKeyhole, NotebookPen, Sparkles, TrendingDown, TrendingUp, UserRound, X } from 'lucide-react'
-import { FormEvent, memo, useCallback, useEffect, useRef, useState } from 'react'
+import { Bell, CalendarDays, Check, ChevronRight, Crown, CreditCard, Gem, LayoutDashboard, LockKeyhole, NotebookPen, Sparkles, UserRound, X } from 'lucide-react'
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
 import TipsFeed from './tips-feed'
@@ -10,8 +10,8 @@ import JournalTab from './journal-tab'
 import { cn } from '@/lib/utils'
 import { subscribeToSignals } from '@/lib/firestore'
 import { PwaInstallButton } from './pwa-client'
+import SignalCard, { type Signal } from './signal-card'
 
-type Signal = { id: string | number; pair: string; direction: 'BUY' | 'SELL'; entry: string; tp: string; sl: string; tp2?: string; tp3?: string; notes?: string; confidence: string; time: string; status?: 'ACTIVE' | 'WIN' | 'LOSS'; pips?: string }
 type Draft = Pick<Signal, 'pair' | 'direction' | 'entry' | 'tp' | 'sl'> & { tp2: string; tp3: string; notes: string }
 
 const initialSignals: Signal[] = [
@@ -89,7 +89,7 @@ export default function VipForexApp() {
       const version = JSON.stringify(records.map((record) => [record.id, record.status, record.entry, record.tp1, record.sl]))
       if (version === signalVersionRef.current) return
       signalVersionRef.current = version
-      setSignals(records.map((record) => ({ id: record.id, pair: record.pair, direction: record.action, entry: record.entry, tp: record.tp1, sl: record.sl, tp2: record.tp2, tp3: record.tp3, notes: record.notes, confidence: 'Live', time: 'Just now', status: record.status })))
+      setSignals(records.map((record) => ({ id: record.id, pair: record.pair, direction: record.action, entry: record.entry, tp: record.tp1, sl: record.sl, tp2: record.tp2, tp3: record.tp3, notes: record.notes, confidence: 'Live', time: 'Just now', status: record.status, createdAt: record.createdAt })))
     })
     return () => unsubscribe()
   }, [])
@@ -128,9 +128,6 @@ export default function VipForexApp() {
     <AnimatePresence>{pushPrompt && <PushPrompt onClose={() => setPushPrompt(false)} />}</AnimatePresence>
   </main>
 }
-
-const SignalCard = memo(function SignalCard({ signal, index, copied, onCopy }: { signal: Signal; index: number; copied: boolean; onCopy: (signal: Signal) => void }) { const buy = signal.direction === 'BUY'; return <motion.article initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06, ...spring }} className="mb-3 rounded-xl border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-indigo-950/20 p-4"><div className="flex items-start justify-between"><div className="flex items-center gap-3"><div className={`grid h-9 w-9 place-items-center rounded-lg border ${buy ? 'border-emerald-900 text-emerald-400' : 'border-red-900 text-red-400'}`}>{buy ? <TrendingUp size={17} /> : <TrendingDown size={17} />}</div><div><div className="flex items-center gap-2"><h2 className="font-bold">{signal.pair}</h2><span className={`rounded px-1.5 py-0.5 text-sm font-bold ${buy ? 'bg-emerald-950 text-emerald-400' : 'bg-red-950 text-red-400'}`}>{signal.direction}</span></div><p className="mt-1 text-sm text-slate-300">{signal.time} · {signal.confidence} confidence</p></div></div><span className={`mt-1 h-2 w-2 rounded-full ${buy ? 'bg-emerald-500' : 'bg-red-500'}`} /></div><div className="mt-4 grid grid-cols-3 gap-2 border-y border-[#27272a] py-3"><Level label="ENTRY" value={signal.entry} /><Level label="TP1" value={signal.tp} color="text-emerald-400" /><Level label="STOP LOSS" value={signal.sl} color="text-red-400" /></div>{(signal.tp2 || signal.tp3 || signal.notes) && <div className="border-b border-[#27272a] pb-3 text-sm"><div className="flex gap-4 font-mono text-sm text-emerald-400">{signal.tp2 && <span>TP2 {signal.tp2}</span>}{signal.tp3 && <span>TP3 {signal.tp3}</span>}</div>{signal.notes && <p className="mt-2 leading-relaxed text-slate-300">{signal.notes}</p>}</div>}<motion.button whileTap={{ scale: 0.98 }} onClick={() => onCopy(signal)} className={`mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold ${copied ? 'bg-zinc-100 text-zinc-950' : 'bg-[#27272a] text-zinc-200'}`}>{copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy Signal</>}</motion.button></motion.article> })
-function Level({ label, value, color = 'text-zinc-200' }: { label: string; value: string; color?: string }) { return <div><p className="text-sm tracking-wider text-slate-400">{label}</p><p className={`mt-1 font-mono text-sm font-bold ${color}`}>{value}</p></div> }
 
 function HistoryView({ signals }: { signals: Signal[] }) { const wins = signals.filter((signal) => signal.status === 'WIN').length; const winRate = Math.round((wins / signals.length) * 100); return <div><div className="rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-400/10 via-blue-500/10 to-indigo-500/10 p-5 shadow-lg shadow-cyan-950/20"><p className="font-mono text-2xl font-bold text-white">Win Rate: <span className="text-cyan-300">{winRate}%</span></p></div><div className="mt-5 space-y-3">{signals.map((signal) => { const isWin = signal.status === 'WIN'; return <article key={signal.id} className="rounded-xl border border-slate-800/80 bg-slate-900/70 p-4"><div className="flex min-w-0 items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-2"><h3 className="truncate font-bold text-white">{signal.pair}</h3><span className={`shrink-0 rounded-md px-2 py-1 text-xs font-bold tracking-wide ${signal.direction === 'BUY' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>{signal.direction}</span></div><span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold tracking-wide ${isWin ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>{isWin ? 'WIN' : 'LOSS'}</span></div><div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-800 pt-3"><span className="font-mono text-sm font-bold text-slate-300">Entry: {signal.entry}</span><span className="text-right text-sm text-slate-400">{isWin ? 'Hit TP2' : 'Hit Stop Loss'}</span></div></article> })}</div></div> }
 type EconomicEvent = { id: string; title: string; currency: string; releaseAt: string; impact: 'HIGH' | 'MEDIUM' | 'LOW'; forecast: string; previous: string }
