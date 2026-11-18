@@ -47,61 +47,51 @@ export default function SignalCard({ signal, index, copied, onCopy }: SignalCard
     return () => window.clearInterval(interval)
   }, [])
 
-  const accent = buy
-    ? 'border-emerald-400/25 shadow-[0_0_0_1px_rgba(52,211,153,0.04),0_10px_40px_-12px_rgba(16,185,129,0.35)]'
-    : 'border-rose-400/25 shadow-[0_0_0_1px_rgba(251,113,133,0.04),0_10px_40px_-12px_rgba(244,63,94,0.35)]'
+  const isLive = !signal.status || signal.status === 'ACTIVE'
 
   return <motion.article
-    initial={{ opacity: 0, y: 10 }}
+    initial={{ opacity: 0, y: 8 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.05, type: 'spring', stiffness: 380, damping: 30 }}
-    className={`relative mb-3 overflow-hidden rounded-2xl border bg-[#0b0d10] ${accent}`}
+    transition={{ delay: index * 0.04, type: 'spring', stiffness: 380, damping: 32 }}
+    className={`mb-3 rounded-xl border bg-[#0a0c0f] px-4 py-3.5 ${buy ? 'border-emerald-400/20' : 'border-rose-400/20'}`}
   >
-    <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-[3px] ${buy ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-
-    <div className="py-4 pl-5 pr-4">
-      <header className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <h2 className="truncate text-[17px] font-semibold tracking-tight text-white">{pair}</h2>
-          <span className={`inline-flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-bold tracking-wider ${buy ? 'bg-emerald-400/10 text-emerald-300' : 'bg-rose-400/10 text-rose-300'}`}>
-            {buy ? <ArrowUpRight size={12} aria-hidden="true" /> : <ArrowDownRight size={12} aria-hidden="true" />}
-            {signal.direction}
-          </span>
-        </div>
-        <time dateTime={createdAt?.toISOString()} className="shrink-0 text-[11px] font-medium tabular-nums text-zinc-500">
-          {formatRelativeTime(createdAt, now, signal.time)}
-        </time>
-      </header>
-
-      <p className={`mt-1 flex items-center gap-1.5 text-[11px] font-medium ${status.text}`}>
-        <span aria-hidden="true" className={`size-1.5 rounded-full ${status.dot} ${signal.status === 'ACTIVE' || !signal.status ? 'animate-pulse' : ''}`} />
-        {status.label}
-      </p>
-
-      <dl className="mt-4 divide-y divide-white/[0.05]" aria-label="Trade levels">
-        <PriceRow label="Entry" value={signal.entry} valueClass="text-white" />
-        <PriceRow label="SL" value={signal.sl} valueClass="text-rose-300" />
-        <PriceRow label="TP1" value={signal.tp} valueClass="text-emerald-300" />
-        {signal.tp2 ? <PriceRow label="TP2" value={signal.tp2} valueClass="text-emerald-300" /> : null}
-        {signal.tp3 ? <PriceRow label="TP3" value={signal.tp3} valueClass="text-emerald-300" /> : null}
-      </dl>
-
-      <blockquote className="mt-4 border-l border-white/10 pl-3">
-        <p className="text-[13.5px] italic leading-relaxed text-zinc-300">{`"${analystNote}"`}</p>
-        <footer className="mt-1 text-[11px] font-medium not-italic text-zinc-500">{'— Desk analyst'}</footer>
-      </blockquote>
-
-      <div className="mt-4 flex items-center justify-between border-t border-white/[0.05] pt-3">
-        <span className="text-[11px] font-medium text-zinc-500">Risk 1–2% per trade</span>
+    <header className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <h2 className="truncate text-[16px] font-bold tracking-tight text-white">{pair}</h2>
+        <span className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[10.5px] font-bold tracking-wider ${buy ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>
+          {buy ? <ArrowUpRight size={11} aria-hidden="true" /> : <ArrowDownRight size={11} aria-hidden="true" />}
+          {signal.direction}
+        </span>
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        <span className="flex items-center gap-1.5 text-[11px] font-medium tabular-nums text-zinc-500">
+          <span aria-hidden="true" className={`size-1.5 rounded-full ${status.dot} ${isLive ? 'animate-pulse' : ''}`} />
+          <span className="sr-only">{status.label}, </span>
+          <time dateTime={createdAt?.toISOString()}>{formatRelativeTime(createdAt, now, signal.time)}</time>
+        </span>
         <button
           type="button"
           onClick={() => onCopy(signal)}
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-zinc-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+          aria-label={copied ? 'Setup copied' : `Copy ${pair} ${signal.direction} setup`}
+          title="Copy setup"
+          className="-mr-1.5 grid size-8 place-items-center rounded-md text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
         >
-          {copied ? <><Check size={13} aria-hidden="true" className="text-emerald-300" /> Copied</> : <><Copy size={13} aria-hidden="true" /> Copy trade</>}
+          {copied ? <Check size={14} aria-hidden="true" className="text-emerald-300" /> : <Copy size={14} aria-hidden="true" />}
         </button>
       </div>
-    </div>
+    </header>
+
+    <dl className="mt-2.5 divide-y divide-white/5 border-y border-white/5" aria-label="Trade levels">
+      <PriceRow label="Entry" value={signal.entry} valueClass="text-zinc-100" />
+      <PriceRow label="Stop Loss" value={signal.sl} valueClass="text-rose-300/90" />
+      <PriceRow label="TP 1" value={signal.tp} valueClass="text-emerald-300/90" />
+      {signal.tp2 ? <PriceRow label="TP 2" value={signal.tp2} valueClass="text-emerald-300/90" /> : null}
+      {signal.tp3 ? <PriceRow label="TP 3" value={signal.tp3} valueClass="text-emerald-300/90" /> : null}
+    </dl>
+
+    <p className={`mt-3 border-l-2 pl-3 text-[13px] leading-relaxed text-zinc-400 ${buy ? 'border-emerald-400/40' : 'border-rose-400/40'}`}>
+      {analystNote}
+    </p>
   </motion.article>
 }
 
@@ -119,15 +109,15 @@ function PriceRow({ label, value, valueClass }: { label: string; value: string; 
     window.setTimeout(() => setCopyState('idle'), 1500)
   }
 
-  return <div className="flex items-center justify-between gap-3 py-2">
-    <dt className="w-12 shrink-0 text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">{label}</dt>
-    <dd className="flex min-w-0 items-center gap-1">
-      <span className={`truncate font-mono text-[15px] font-semibold tabular-nums tracking-tight ${valueClass}`}>{value}</span>
+  return <div className="flex items-center justify-between gap-3 py-1.5">
+    <dt className="shrink-0 text-[13px] font-medium text-zinc-500">{label}</dt>
+    <dd className="flex min-w-0 items-center gap-0.5">
+      <span title={value} className={`truncate font-mono text-[14.5px] font-medium tabular-nums ${valueClass}`}>{value}</span>
       <button
         type="button"
         onClick={copyValue}
         aria-label={`Copy ${label} price ${value}`}
-        className="grid size-7 shrink-0 place-items-center rounded-md text-zinc-600 transition-colors hover:bg-white/5 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        className="-mr-1.5 grid size-7 shrink-0 place-items-center rounded-md text-zinc-600 transition-colors hover:bg-white/5 hover:text-zinc-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
       >
         {copyState === 'copied' ? <Check size={12} aria-hidden="true" className="text-emerald-300" /> : <Copy size={12} aria-hidden="true" />}
       </button>
