@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bell, CalendarDays, Check, ChevronRight, Crown, CreditCard, Gem, LayoutDashboard, LockKeyhole, NotebookPen, Sparkles, UserRound, X } from 'lucide-react'
+import { Bell, CalendarDays, Check, ChevronRight, Crown, Gem, LayoutDashboard, LockKeyhole, NotebookPen, Sparkles, UserRound, X } from 'lucide-react'
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
@@ -11,6 +11,10 @@ import { cn } from '@/lib/utils'
 import { subscribeToSignals } from '@/lib/firestore'
 import { PwaInstallButton } from './pwa-client'
 import SignalCard, { type Signal } from './signal-card'
+import MonnifyCheckout from './monnify-checkout'
+import DeviceIdCard from './device-id-card'
+import { useMembership } from '@/lib/use-membership'
+import { playChime, unlockChime } from '@/lib/chime'
 
 type Draft = Pick<Signal, 'pair' | 'direction' | 'entry' | 'tp' | 'sl'> & { tp2: string; tp3: string; notes: string }
 
@@ -49,33 +53,22 @@ export default function VipForexApp() {
   const [signals, setSignals] = useState<Signal[]>(initialSignals)
   const [history, setHistory] = useState<Signal[]>(closedSignals)
   const [copiedId, setCopiedId] = useState<string | number | null>(null)
-  const [isVip, setIsVip] = useState(false)
+  const { deviceId, membership, isVip, refresh } = useMembership()
   const [pricingOpen, setPricingOpen] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
   const [pushPrompt, setPushPrompt] = useState(false)
   const signalVersionRef = useRef('')
+  const knownSignalIds = useRef<Set<string> | null>(null)
+  const chimeEligible = useRef(false)
+  chimeEligible.current = isVip && activeTab === 'Signals'
 
   useEffect(() => {
-    const chime = () => {
-      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      if (!AudioContextClass) return
-      const context = new AudioContextClass()
-      const oscillator = context.createOscillator()
-      const gain = context.createGain()
-      oscillator.type = 'sine'
-      oscillator.frequency.setValueAtTime(740, context.currentTime)
-      oscillator.frequency.exponentialRampToValueAtTime(1040, context.currentTime + 0.16)
-      gain.gain.setValueAtTime(0.0001, context.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.06, context.currentTime + 0.02)
-      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.24)
-      oscillator.connect(gain)
-      gain.connect(context.destination)
-      oscillator.start()
-      oscillator.stop(context.currentTime + 0.25)
-      window.setTimeout(() => { void context.close() }, 350)
-    }
+    window.addEventListener('pointerdown', unlockChime, { passive: true })
+    return () => window.removeEventListener('pointerdown', unlockChime)
+  }, [])
+
+  useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (event.key === 'trade-smart-live-last-signal') chime()
       if (event.key === 'trade-smart-live-history' && event.newValue) { try { setHistory(JSON.parse(event.newValue)) } catch { setHistory(closedSignals) } }
     }
     const savedHistory = window.localStorage.getItem('trade-smart-live-history')
@@ -86,6 +79,11 @@ export default function VipForexApp() {
 
   useEffect(() => {
     const unsubscribe = subscribeToSignals((records) => {
+      const ids = new Set(records.map((record) => record.id))
+      const previous = knownSignalIds.current
+      // Skip the initial snapshot so existing signals don't chime on page load.
+      if (previous && chimeEligible.current && records.some((record) => !previous.has(record.id) && record.status === 'ACTIVE')) playChime()
+      knownSignalIds.current = ids
       const version = JSON.stringify(records.map((record) => [record.id, record.status, record.entry, record.tp1, record.sl]))
       if (version === signalVersionRef.current) return
       signalVersionRef.current = version
@@ -98,7 +96,7 @@ export default function VipForexApp() {
     void navigator.clipboard?.writeText(`${signal.pair} ${signal.direction} | Entry ${signal.entry} | TP ${signal.tp} | SL ${signal.sl}`).catch(() => undefined)
     setCopiedId(signal.id); window.setTimeout(() => setCopiedId(null), 1800)
   }, [])
-  function completePayment() { setPaymentOpen(false); setIsVip(true); setPushPrompt(true) }
+  function completePayment() { setPaymentOpen(false); void refresh(); setPushPrompt(true) }
   function handleBrandTap() {
     brandTapCount.current += 1
     if (brandTapTimer.current) window.clearTimeout(brandTapTimer.current)
@@ -119,12 +117,12 @@ export default function VipForexApp() {
         {activeTab === 'History' && <HistoryView signals={history} />}
         {activeTab === 'Journal' && <JournalTab />}
         {activeTab === 'Tips' && <TipsFeed />}
-        {activeTab === 'Profile' && <div><SimpleView title="Your membership" body={isVip ? 'VIP access is active. Push notifications are enabled for your account.' : 'You are currently on the Free plan.'} action={!isVip ? () => setPricingOpen(true) : undefined} /><PwaInstallButton />{isVip && <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4"><span className="text-sm font-bold text-emerald-300">VIP subscription active</span><span className="font-mono text-sm font-bold text-emerald-200">30 days remaining</span></div>}</div>}
+        {activeTab === 'Profile' && <div className="flex flex-col gap-3"><DeviceIdCard deviceId={deviceId} membership={membership} /><SimpleView title="Your membership" body={isVip ? 'VIP access is active. Push notifications are enabled for your account.' : 'You are currently on the Free plan.'} action={!isVip ? () => setPricingOpen(true) : undefined} /><PwaInstallButton /></div>}
       </section>
       <nav aria-label="Primary navigation" className="fixed bottom-0 left-0 right-0 z-50 pointer-events-auto border-t border-slate-800/80 bg-[#050814]/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"><div className="mx-auto flex h-16 w-full max-w-md items-center justify-around pointer-events-auto">{tabs.map(([label, Icon]) => <button type="button" key={label} onClick={() => setActiveTab(label)} aria-current={activeTab === label ? 'page' : undefined} className={`relative z-10 flex h-full min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${activeTab === label ? 'text-cyan-300' : 'text-slate-300'}`}><Icon size={18} strokeWidth={activeTab === label ? 2.2 : 1.8} /><span>{label}</span></button>)}</div></nav>
     </div>
     <AnimatePresence>{pricingOpen && <PricingModal onClose={() => setPricingOpen(false)} onUnlock={() => { setPricingOpen(false); setPaymentOpen(true) }} />}</AnimatePresence>
-    <AnimatePresence>{paymentOpen && <PaymentModal onClose={() => setPaymentOpen(false)} onComplete={completePayment} />}</AnimatePresence>
+    <AnimatePresence>{paymentOpen && <MonnifyCheckout deviceId={deviceId} onClose={() => setPaymentOpen(false)} onActivated={completePayment} />}</AnimatePresence>
     <AnimatePresence>{pushPrompt && <PushPrompt onClose={() => setPushPrompt(false)} />}</AnimatePresence>
   </main>
 }
@@ -184,5 +182,10 @@ function PlanComparisonCard({ title, benefits, featured = false }: PlanCompariso
     </ul>
   </section>
 }
-function PaymentModal({ onClose, onComplete }: { onClose: () => void; onComplete: () => void }) { return <motion.div className="fixed inset-0 z-[60] grid place-items-center bg-black/80 px-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={spring} className="w-full max-w-[380px] rounded-2xl border border-[#3f3f46] bg-[#121215] p-5"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><CreditCard size={18} /><h2 className="font-bold">Paystack checkout</h2></div><button onClick={onClose} aria-label="Close payment" className="text-slate-300"><X size={18} /></button></div><div className="mt-5 rounded-lg border border-[#27272a] bg-[#09090b] p-4"><p className="text-sm text-slate-300">Trade Smart Live VIP</p><p className="mt-2 font-mono text-2xl font-bold">₦15,000</p><p className="mt-1 text-sm text-slate-300">Monthly membership</p></div><div className="mt-4 space-y-3"><input aria-label="Email address" placeholder="Email address" className="h-11 w-full rounded-lg border border-[#3f3f46] bg-[#09090b] px-3 text-sm outline-none focus:border-zinc-100" /><input aria-label="Card number" placeholder="Card number" className="h-11 w-full rounded-lg border border-[#3f3f46] bg-[#09090b] px-3 font-mono text-sm outline-none focus:border-zinc-100" /></div><button onClick={onComplete} className="mt-5 h-11 w-full rounded-lg bg-zinc-100 text-sm font-bold text-zinc-950">Complete payment</button><p className="mt-3 text-center text-sm text-slate-400">Simulation mode · No charge will be made</p></motion.div></motion.div> }
-function PushPrompt({ onClose }: { onClose: () => void }) { return <motion.div className="fixed inset-x-5 bottom-24 z-[70] mx-auto max-w-[420px] rounded-xl border border-[#3f3f46] bg-[#18181b] p-4 shadow-2xl" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}><div className="flex gap-3"><Bell size={18} className="mt-0.5" /><div><p className="text-sm font-bold">Enable push notifications?</p><p className="mt-1 text-sm leading-relaxed text-slate-300">Get real-time alerts when a new VIP signal is published.</p><div className="mt-3 flex gap-2"><button onClick={onClose} className="rounded-md bg-zinc-100 px-3 py-2 text-sm font-bold text-zinc-950">Allow notifications</button><button onClick={onClose} className="px-3 py-2 text-sm text-slate-300">Not now</button></div></div></div></motion.div> }
+function PushPrompt({ onClose }: { onClose: () => void }) { return <motion.div className="fixed inset-x-5 bottom-24 z-[70] mx-auto max-w-[420px] rounded-xl border border-[#3f3f46] bg-[#18181b] p-4 shadow-2xl" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}><div className="flex gap-3"><Bell size={18} className="mt-0.5" /><div><p className="text-sm font-bold">Enable push notifications?</p><p className="mt-1 text-sm leading-relaxed text-slate-300">Get real-time alerts when a new VIP signal is published.</p><div className="mt-3 flex gap-2"><button onClick={() => { requestPushPermission(); onClose() }} className="rounded-md bg-zinc-100 px-3 py-2 text-sm font-bold text-zinc-950">Allow notifications</button><button onClick={onClose} className="px-3 py-2 text-sm text-slate-300">Not now</button></div></div></div></motion.div> }
+
+function requestPushPermission() {
+  const w = window as typeof window & { OneSignalDeferred?: Array<(oneSignal: { Notifications: { requestPermission: () => Promise<void> } }) => void> }
+  w.OneSignalDeferred = w.OneSignalDeferred || []
+  w.OneSignalDeferred.push((oneSignal) => { void oneSignal.Notifications.requestPermission().catch(() => undefined) })
+}
